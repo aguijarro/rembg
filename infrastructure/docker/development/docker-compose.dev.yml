@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  rembg_python_mongodb:
+    image: mongo:latest
+    container_name: rembg_python_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - rembg_mongodb_data:/data/db
+    networks:
+      - rembg_mongodb_network
+
+  rembg_mongodb_dev:
+    build:
+      context: ../../../
+      dockerfile: infrastructure/docker/development/app/Dockerfile
+      args:
+        - ENVIRONMENT=development
+    container_name: rembg_mongodb_dev
+    restart: unless-stopped
+    env_file:
+      - .env.development
+    ports:
+      - "8005:8000"
+    volumes:
+      - ../../../app:/usr/rembg_python/app:rw
+    networks:
+      - rembg_mongodb_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      - rembg_python_mongodb
+    environment:
+      - MONGODB_URL=mongodb://rembg_python_mongodb:27017
+
+networks:
+  rembg_mongodb_network:
+    driver: bridge
+
+volumes:
+  rembg_mongodb_data:
+
