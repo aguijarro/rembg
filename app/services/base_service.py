@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
-from app.core.mongodb import connect_to_mongo, close_mongo_connection
+from app.core.mongodb import mongodb
 
 logger = logging.getLogger(__name__)
 
@@ -10,9 +10,9 @@ class BaseService:
     def __init__(self, settings, service_name: str):
         @asynccontextmanager
         async def lifespan(app: FastAPI):
-            await connect_to_mongo()
+            await mongodb.connect_to_database()
             yield
-            await close_mongo_connection()
+            await mongodb.close_database_connection()
 
         self.app = FastAPI(
             title=settings.PROJECT_NAME,
